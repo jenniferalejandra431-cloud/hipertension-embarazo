@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Asistente de Trastornos Hipertensivos del Embarazo</title>
+<style>
+:root{--bg:#f4f8fb;--card:#fff;--ink:#17324d;--muted:#60758a;--accent:#087f8c;--warn:#b45309;--danger:#b91c1c;--ok:#047857}
+*{box-sizing:border-box} body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--ink)}
+header{background:linear-gradient(135deg,#0f6171,#1593a5);color:white;padding:26px 18px}
+header h1{margin:0 0 6px;font-size:1.55rem} header p{margin:0;opacity:.92}
+main{max-width:900px;margin:auto;padding:16px}.card{background:var(--card);border-radius:16px;padding:18px;margin:14px 0;box-shadow:0 3px 18px #16324d18}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px}
+label{display:block;font-weight:650;font-size:.92rem;margin-bottom:5px} input,select{width:100%;padding:11px;border:1px solid #cbd5e1;border-radius:10px;background:white;font-size:1rem}
+.check{display:flex;gap:8px;align-items:flex-start;margin:9px 0}.check input{width:auto;margin-top:3px}
+button{width:100%;border:0;border-radius:12px;background:var(--accent);color:white;padding:14px;font-size:1rem;font-weight:750}
+.result{border-left:5px solid var(--accent)} .danger{border-left-color:var(--danger)} .warning{border-left-color:var(--warn)} .ok{border-left-color:var(--ok)}
+.badge{display:inline-block;padding:5px 9px;border-radius:999px;background:#e6f5f7;font-weight:700;margin-bottom:8px}
+ul{padding-left:21px}.small{font-size:.84rem;color:var(--muted);line-height:1.45}.hide{display:none}
+.tabs{display:flex;gap:8px;flex-wrap:wrap}.tabs button{width:auto;padding:9px 12px;background:#e8f1f5;color:var(--ink)}
+h2{font-size:1.18rem;margin-top:0}.source{background:#eef6f7;border-radius:10px;padding:10px}
+</style>
+</head>
+<body>
+<header><h1>🤰 Trastornos hipertensivos del embarazo</h1><p>Asistente educativo para primer nivel de atención · MSP Ecuador</p></header>
+<main>
+<div class="card">
+<h2>1. Datos clínicos</h2>
+<div class="grid">
+<div><label>Situación</label><select id="estado"><option value="embarazo">Embarazo</option><option value="puerperio">Puerperio</option></select></div>
+<div><label>Edad gestacional (semanas)</label><input id="eg" type="number" min="1" max="43" value="34"></div>
+<div><label>Presión sistólica (mmHg)</label><input id="tas" type="number" value="120"></div>
+<div><label>Presión diastólica (mmHg)</label><input id="tad" type="number" value="80"></div>
+<div><label>Hipertensión conocida antes del embarazo / &lt;20 sem</label><select id="cronica"><option value="no">No</option><option value="si">Sí</option></select></div>
+<div><label>Proteinuria</label><select id="prot"><option value="no">Negativa/no conocida</option><option value="si">Significativa / tira ≥1+</option></select></div>
+<div><label>Plaquetas (/µL, opcional)</label><input id="plaq" type="number" placeholder="Ej. 95000"></div>
+<div><label>Creatinina (mg/dL, opcional)</label><input id="creat" type="number" step="0.01" placeholder="Ej. 1.2"></div>
+</div>
+</div>
+
+<div class="card">
+<h2>2. Signos de gravedad / órgano blanco</h2>
+<label class="check"><input type="checkbox" id="hep"> Enzimas hepáticas ≥2 veces lo normal</label>
+<label class="check"><input type="checkbox" id="epi"> Dolor severo persistente en epigastrio o cuadrante superior derecho sin otra explicación</label>
+<label class="check"><input type="checkbox" id="pulm"> Edema pulmonar</label>
+<label class="check"><input type="checkbox" id="neuro"> Cefalea de nueva aparición/persistente u otros síntomas neurológicos</label>
+<label class="check"><input type="checkbox" id="visual"> Alteraciones visuales (visión borrosa, escotomas, diplopía, fotofobia, etc.)</label>
+<label class="check"><input type="checkbox" id="conv"> Convulsión tónico-clónica generalizada o coma no atribuible a otra causa</label>
+</div>
+
+<button onclick="evaluar()">ANALIZAR CASO</button>
+
+<div id="salida" class="card result hide"></div>
+
+<div class="card">
+<h2>Pruebas y confirmación</h2>
+<ul>
+<li>Confirmar la PA con técnica adecuada; la guía usa el promedio de al menos 2 mediciones, separadas al menos 15 minutos y en el mismo brazo.</li>
+<li>Ante TA ≥140/90 mmHg, valorar proteinuria. La tira reactiva puede usarse inicialmente.</li>
+<li>Si tira ≥1+, confirmar con proteína en orina de 24 h o relación proteína/creatinina.</li>
+<li>Para afectación materna: hemograma/plaquetas, función renal (creatinina) y función hepática (AST/ALT), según disponibilidad y nivel de atención.</li>
+</ul>
+</div>
+
+<div class="card">
+<h2>Fuentes y alcance</h2>
+<p class="source"><b>Base:</b> Ministerio de Salud Pública del Ecuador. <i>Trastornos hipertensivos del embarazo. Guía de Práctica Clínica, segunda edición, actualización 2016.</i></p>
+<p class="small">Herramienta educativa de apoyo. No reemplaza valoración clínica, confirmación diagnóstica, protocolos locales, juicio profesional ni la referencia o atención de emergencia. La lógica prioriza la seguridad: los hallazgos graves generan alerta aunque falten otros datos.</p>
+</div>
+</main>
+<script>
+function n(id){let v=document.getElementById(id).value; return v===""?null:Number(v)}
+function c(id){return document.getElementById(id).checked}
+function evaluar(){
+ const tas=n("tas"),tad=n("tad"),eg=n("eg"),estado=document.getElementById("estado").value;
+ const cronica=document.getElementById("cronica").value==="si", prot=document.getElementById("prot").value==="si";
+ const plaq=n("plaq"),creat=n("creat");
+ const hta=tas>=140||tad>=90, severa=tas>=160||tad>=110;
+ let graves=[];
+ if(severa) graves.push("Hipertensión severa (TAS ≥160 y/o TAD ≥110 mmHg)");
+ if(plaq!==null && plaq<100000) graves.push("Trombocitopenia <100.000/µL");
+ if(c("hep")) graves.push("Enzimas hepáticas ≥2 veces lo normal");
+ if(c("epi")) graves.push("Dolor epigástrico/CSD severo persistente");
+ if(creat!==null && creat>1.1) graves.push("Creatinina >1,1 mg/dL");
+ if(c("pulm")) graves.push("Edema pulmonar");
+ if(c("neuro")) graves.push("Síntomas neurológicos");
+ if(c("visual")) graves.push("Alteraciones visuales");
+ const conv=c("conv");
+ let dx="", urg="", clase="warning", notas=[];
+ if(conv){
+   dx="Eclampsia: hallazgo compatible que requiere atención de emergencia";
+   urg="EMERGENCIA: activar respuesta obstétrica, estabilizar y referir/trasladar al nivel resolutivo según protocolo institucional.";
+   clase="danger";
+ } else if(estado==="puerperio" && hta && (prot||graves.length)){
+   dx="Sospecha de preeclampsia posparto";
+   urg=graves.length?"Referencia/atención urgente por signos de gravedad.":"Requiere valoración obstétrica y confirmación.";
+   clase=graves.length?"danger":"warning";
+ } else if(cronica && hta && (prot||graves.length)){
+   dx="Hipertensión crónica con sospecha de preeclampsia sobreañadida";
+   urg=graves.length?"Referencia inmediata a servicio obstétrico de mayor capacidad resolutiva.":"Valoración especializada y confirmación diagnóstica.";
+   clase=graves.length?"danger":"warning";
+ } else if(cronica && hta){
+   dx="Hipertensión crónica";
+   urg="Seguimiento de alto riesgo y referencia según capacidad resolutiva y estabilidad.";
+ } else if(hta && eg>=20 && graves.length){
+   dx="Preeclampsia con signos de gravedad / afectación de órgano blanco";
+   urg="Referencia inmediata a emergencia obstétrica de mayor capacidad resolutiva; iniciar estabilización según protocolo.";
+   clase="danger";
+ } else if(hta && eg>=20 && prot){
+   dx="Preeclampsia sin signos de gravedad identificados en los datos ingresados";
+   urg="Requiere confirmación, vigilancia y referencia/seguimiento obstétrico según nivel de atención.";
+ } else if(hta && eg>=20){
+   dx="Hipertensión gestacional probable (si se confirma ausencia de proteinuria y órgano blanco)";
+   urg="Evaluar proteinuria y laboratorio; vigilar aparición de signos/síntomas de preeclampsia.";
+ } else if(hta && eg<20){
+   dx="Hipertensión antes de 20 semanas: sospechar hipertensión crónica";
+   urg="Confirmar antecedentes y PA; valorar comorbilidad/daño orgánico y referir según riesgo.";
+ } else {
+   dx="No se identifican criterios de hipertensión con los valores ingresados";
+   urg="Continuar control prenatal habitual y reevaluar ante síntomas o cambios clínicos.";
+   clase="ok";
+ }
+ if(eg<20 && (prot||graves.length)) notas.push("La preeclampsia antes de 20 semanas es excepcional; la guía señala situaciones específicas y requiere evaluación especializada.");
+ if(!hta && graves.length) notas.push("Hay hallazgos de órgano blanco/síntomas de alarma aunque la PA ingresada no sea hipertensiva: requieren valoración clínica urgente y diagnóstico diferencial.");
+ let pruebas=[];
+ if(hta) pruebas.push("Repetir/confirmar PA con técnica adecuada.");
+ if(hta) pruebas.push("Proteinuria: tira reactiva inicial; si ≥1+, confirmar con 24 h o relación proteína/creatinina.");
+ if(hta||graves.length) pruebas.push("Hemograma con plaquetas, creatinina y AST/ALT según disponibilidad y nivel de atención.");
+ let out=document.getElementById("salida");
+ out.className="card result "+clase;
+ out.innerHTML=`<span class="badge">Resultado orientativo</span><h2>${dx}</h2>
+ <p><b>Conducta:</b> ${urg}</p>
+ ${graves.length?`<p><b>Criterios de gravedad detectados:</b></p><ul>${graves.map(x=>`<li>${x}</li>`).join("")}</ul>`:"<p><b>Criterios de gravedad detectados:</b> ninguno con los datos ingresados.</p>"}
+ ${pruebas.length?`<p><b>Pruebas/acciones sugeridas:</b></p><ul>${pruebas.map(x=>`<li>${x}</li>`).join("")}</ul>`:""}
+ ${notas.length?`<p><b>Observaciones:</b></p><ul>${notas.map(x=>`<li>${x}</li>`).join("")}</ul>`:""}
+ <p class="small">Resultado educativo basado en criterios de la GPC MSP. Debe ser confirmado por personal de salud.</p>`;
+ out.scrollIntoView({behavior:"smooth"});
+}
+</script>
+</body></html>
